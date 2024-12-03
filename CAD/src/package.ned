@@ -1,0 +1,3 @@
+package cad;
+
+@license(LGPL);

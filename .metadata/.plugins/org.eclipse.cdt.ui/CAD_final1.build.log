@@ -1,0 +1,6 @@
+13:12:26 **** Incremental Build of configuration release for project CAD_final1 ****
+make MODE=release all 
+make: Nothing to be done for 'all'.
+
+13:12:26 Build Finished. 0 errors, 0 warnings. (took 354ms)
+

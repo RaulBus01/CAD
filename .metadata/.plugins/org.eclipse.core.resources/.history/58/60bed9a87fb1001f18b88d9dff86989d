@@ -1,0 +1,70 @@
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
+// 
+
+#include "myQ.h"
+
+Define_Module(MyQ);
+
+void MyQ::initialize()
+{
+    queue.setName("queue");
+}
+
+void MyQ::handleMessage(cMessage *msg)
+
+{
+
+    int queueLength; //=9;
+
+    if (msg->arrivedOn("rxPackets")){
+        queue.insert(msg);
+    } else if (msg->arrivedOn("rxScheduling")){
+        //read parameters from msg
+        int nrOfRadioBlocks = (int)msg->par("nrOfBlocks");
+        int userPriorityType =(int)msg->par("userProrityType");
+        delete msg;
+        //empty the queue !
+        while(!queue.isEmpty() && nrOfRadioBlocks > 0){
+        
+          msg = (cMessage *)queue.pop();
+          cMsgPar *par = new cMsgPar("userPriorityType");
+          par->setLongValue(userPriorityType);
+          send(msg, "txPackets");
+          nrOfRadioBlocks--;
+        }
+    }
+    queueLength = queue.getLength();
+    cMessage *qInfo = new cMessage("qInfo");
+    qInfo->addPar("queueLengthInfo");
+    qInfo->par("queueLengthInfo").setLongValue(queueLength);//queueLength instead of 2
+
+    //only for test
+
+    int i =  getParentModule()->getIndex();
+
+    long ql_info_tst = qInfo->par("queueLengthInfo");
+    EV << "queueLength[" << i<<"] = " << queueLength << " ql_info_tst = " << ql_info_tst << endl;
+    send(qInfo, "txInfo");
+
+    /* Communication between modules using parameters
+    queueLength = queue.getLength();
+    cPar&  qlpar = par("qlp");
+    qlpar.setIntValue(queueLength);
+    //next 2 statements only for debug
+    int qt = par("qlp").intValue();
+    EV << "qt= "<<qt <<endl;
+    */
+
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;radio-scheduler&apos;" deleteContents="false" description="Delete resource &apos;radio-scheduler&apos;" element1="/radio-scheduler" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1733223526274"/>
+</session>

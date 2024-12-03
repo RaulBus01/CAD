@@ -1,0 +1,12 @@
+12:52:55 **** Incremental Build of configuration release for project radio-scheduler ****
+make MODE=release all 
+flc.cc
+gen_flc.cc
+myQ.cc
+Scheduler.cc
+Sink.cc
+Source.cc
+Creating executable: out/clang-release//radio-scheduler.exe
+
+12:53:04 Build Finished. 0 errors, 0 warnings. (took 9s.551ms)
+

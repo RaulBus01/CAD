@@ -1,0 +1,75 @@
+version 3
+run Sched1-0-20241203-18:49:04-22264
+attr configname Sched1
+attr datetime 20241203-18:49:04
+attr datetimef 20241203-184904
+attr experiment Sched1
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvarsd ""
+attr iterationvarsf ""
+attr measurement ""
+attr network RadioSch2
+attr processid 22264
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+config description "low job arrival rate"
+config *.usersCount 3
+config **.user[*].generator.sendIaTime "0.2 ms"
+config **.user[*].radioLinkQuality "uniform(0.5, 1)"
+config **.user[0].myqq.qlp 0
+config **.user[1].myqq.qlp 4
+config **.user[2].myqq.qlp 0
+config network RadioSch2
+config sim-time-limit 100h
+config cpu-time-limit 300s
+
+par RadioSch2.scheduler typename "\"cad.Scheduler\""
+par RadioSch2.scheduler schedulingPeriod 1ms
+attr unit ms
+par RadioSch2.scheduler gateSize 3
+par RadioSch2.sink typename "\"cad.Sink\""
+par RadioSch2.sink gateSize 3
+scalar RadioSch2.sink lifetime:mean nan
+attr interpolationmode none
+attr recordingmode mean
+attr title "lifetime of arrived jobs, mean"
+attr unit s
+scalar RadioSch2.sink lifetime:max nan
+attr interpolationmode none
+attr recordingmode max
+attr title "lifetime of arrived jobs, max"
+attr unit s
+par RadioSch2.user[0].generator typename "\"cad.Source\""
+par RadioSch2.user[0].generator sendIaTime 0.2ms
+attr unit ms
+par RadioSch2.user[0].generator generatorPeriod 100ms
+attr unit ms
+par RadioSch2.user[0].myqq typename "\"cad.MyQ\""
+par RadioSch2.user[0].myqq qlp 0
+par RadioSch2.user[0] typename "\"cad.User\""
+par RadioSch2.user[0] radioLinkQuality 0.774407
+par RadioSch2.user[1].generator typename "\"cad.Source\""
+par RadioSch2.user[1].generator sendIaTime 0.2ms
+attr unit ms
+par RadioSch2.user[1].generator generatorPeriod 100ms
+attr unit ms
+par RadioSch2.user[1].myqq typename "\"cad.MyQ\""
+par RadioSch2.user[1].myqq qlp 4
+par RadioSch2.user[1] typename "\"cad.User\""
+par RadioSch2.user[1] radioLinkQuality 0.796422
+par RadioSch2.user[2].generator typename "\"cad.Source\""
+par RadioSch2.user[2].generator sendIaTime 0.2ms
+attr unit ms
+par RadioSch2.user[2].generator generatorPeriod 100ms
+attr unit ms
+par RadioSch2.user[2].myqq typename "\"cad.MyQ\""
+par RadioSch2.user[2].myqq qlp 0
+par RadioSch2.user[2] typename "\"cad.User\""
+par RadioSch2.user[2] radioLinkQuality 0.857595
+par RadioSch2 typename "\"cad.RadioSch2\""
+par RadioSch2 usersCount 3
+

@@ -1,0 +1,43 @@
+18:05:08 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+Scheduler.cc
+Creating executable: ../out/clang-release/src/CAD.exe
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+18:05:11 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+18:09:10 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+18:39:25 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+18:39:26 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+18:44:31 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+18:49:01 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'

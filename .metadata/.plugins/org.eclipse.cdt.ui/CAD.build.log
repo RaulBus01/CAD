@@ -1,0 +1,9 @@
+18:49:01 **** Incremental Build of configuration release for project CAD ****
+make MODE=release all 
+cd src && /usr/bin/make
+make[1]: Entering directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/c/omnet/omnetpp-6.1/samples/CAD/CAD/src'
+
+18:49:01 Build Finished. 0 errors, 0 warnings. (took 407ms)
+

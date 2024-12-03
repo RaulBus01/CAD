@@ -1,0 +1,34 @@
+[General]
+network = RadioSch
+sim-time-limit = 100h
+cpu-time-limit = 300s
+#debug-on-errors = true
+#record-eventlog = true
+
+[Config Sched1]
+description = "Proportional Fair Scheduling with Higher User Count"
+
+# Parameters for Users
+*.usersCount = 5  # Number of users
+
+# Parameters for Scheduler
+*.scheduler.numChannels = 30  # Total PRBs available
+*.scheduler.schedulingPeriod = 1ms  # Scheduling period
+
+# Parameters for User Modules
+**.user[*].generator.sendIaTime = 0.2ms  # Inter-arrival time for packet generation
+**.user[*].radioLinkQuality = 0.5
+
+# Queue priority levels
+**.user[0].myqq.qlp = 0
+**.user[1].myqq.qlp = 4
+**.user[2].myqq.qlp = 0
+**.user[3].myqq.qlp = 0
+**.user[4].myqq.qlp = 0
+
+# Real-time user flags
+**.user[0].isRealTimeUser = false
+**.user[1].isRealTimeUser = true
+**.user[2].isRealTimeUser = false
+**.user[3].isRealTimeUser = true
+**.user[4].isRealTimeUser = false
