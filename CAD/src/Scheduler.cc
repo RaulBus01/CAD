@@ -30,6 +30,12 @@ Scheduler::~Scheduler()
 }
 
 
+bool sort_functionByUserWeight(const UserInfo &a, const UserInfo &b)
+{
+    return a.userWeight > b.userWeight;
+}
+
+
 void Scheduler::initialize()
 {
     NrUsers = par("gateSize").intValue();
@@ -39,6 +45,28 @@ void Scheduler::initialize()
            q[i]=0;
            NrBlocks[i]=0;
       }
+
+    int HIGH_PRIORITY = 3;
+    int MEDIUM_PRIORITY = 2;
+    int LOW_PRIORITY = 1;
+
+    users.resize(NrUsers);
+    for (int i = 0; i < NrUsers; i++) {
+        double radioLinkQuality = getParentModule()->getSubmodule("user", i)->par("radioLinkQuality").doubleValue();
+        double initialLastTimeServed = -1.0f;
+        int initialQueueLength = 0;
+
+        if( i % 3 == 0){
+            users[i] = {i, HIGH_PRIORITY, initialQueueLength, radioLinkQuality, initialLastTimeServed};
+        }else if( i % 3 == 1){
+            users[i] = {i, MEDIUM_PRIORITY, initialQueueLength, radioLinkQuality, initialLastTimeServed};
+        }else{
+            users[i] = {i, LOW_PRIORITY, initialQueueLength, radioLinkQuality, initialLastTimeServed};
+        }
+
+        EV << "User " << i << " has radio link quality " << radioLinkQuality << endl;
+        
+    }
 
  
     scheduleAt(simTime(), selfMsg);
@@ -63,6 +91,10 @@ void Scheduler::handleMessage(cMessage *msg)
                 userLinkQualities[userIndex] = msg->par("radioLinkQuality").doubleValue();
                 EV << "Radio link quality for user " << userIndex << " is " << userLinkQualities[userIndex] << endl;
 
+                users[userIndex].radioLinkQuality = userLinkQualities[userIndex];
+                users[userIndex].queueLength = q[i];
+                
+                EV << "User " << userIndex << " HAS WEIGHT " << users[userIndex].userWeight << endl;
                 delete msg;
             } else {
                 EV << "Warning: Received message without queueLengthInfo parameter" << endl;
@@ -75,41 +107,48 @@ void Scheduler::handleMessage(cMessage *msg)
         int remainingBlocks = NrOfChannels;
         EV << "remainingBlocks = " << remainingBlocks << endl;
 
-        std::vector<int> userIndexes(NrUsers);
-        for (int i = 0; i < NrUsers; i++) {
-            userIndexes[i] = i;
-        }
+        // std::vector<int> userIndexes(NrUsers);
+        // for (int i = 0; i < NrUsers; i++) {
+        //     userIndexes[i] = i;
+        // }
 
         // Sort the user indexes based on the radio link quality
 
-        std::sort(userIndexes.begin(), userIndexes.end(), [this](int i1, int i2) {
-            return userLinkQualities[i1] > userLinkQualities[i2];
-        });
+        // std::sort(userIndexes.begin(), userIndexes.end(), [this](int i1, int i2) {
+        //     return userLinkQualities[i1] > userLinkQualities[i2];
+        // });
 
-        for (int i = 0; i < NrUsers; i++) {
-            int userIndex = userIndexes[i];
-            int nrBlocks = q[userIndex];
+        std::sort(users.begin(), users.end(), sort_functionByUserWeight);
 
+         for (const auto &user : users) {
+            EV << "User " << user.index << " has radio link quality " << user.radioLinkQuality << " and queue length " << user.queueLength << endl;
+            if (remainingBlocks <= 0) {
+                break;
+            }
+            int nrBlocks = user.queueLength;
+            
             if (nrBlocks > 0) {
                 if (nrBlocks <= remainingBlocks) {
-                    EV << "User " << userIndex << " gets " << nrBlocks << " blocks" << endl;
-                    NrBlocks[userIndex] = nrBlocks;
+                    NrBlocks[user.index] = nrBlocks;
                     remainingBlocks -= nrBlocks;
                 } else {
-                    EV << "User " << userIndex << " gets " << remainingBlocks << " blocks" << endl;
-                    NrBlocks[userIndex] = remainingBlocks;
+                    NrBlocks[user.index] = remainingBlocks;
                     remainingBlocks = 0;
                 }
             } else {
-                NrBlocks[userIndex] = 0;
+                NrBlocks[user.index] = 0;
             }
+            EV << "User " << user.index << " has " << NrBlocks[user.index] << " blocks to transmit" << endl;
 
+            // Declare and initialize the cmd variable
             cMessage *cmd = new cMessage("cmd");
             cmd->addPar("nrBlocks");
-            cmd->par("nrBlocks").setLongValue(NrBlocks[userIndex]);
-            send(cmd, "txScheduling", userIndex);
-            
+            cmd->par("nrBlocks").setLongValue(NrBlocks[user.index]);
+            send(cmd, "txScheduling", user.index);
         }
         scheduleAt(simTime() + par("schedulingPeriod").doubleValue(), selfMsg);
+    
+
+      
     }
 }

@@ -23,8 +23,17 @@ using namespace omnetpp;
 /**
  * TODO - Generated class
  */
+
+ struct UserInfo {
+    int index;
+    int userWeight;
+    int queueLength;
+    double radioLinkQuality;
+    double lastTimeServed;
+};
 class Scheduler : public cSimpleModule
 {
+  
 public:
     Scheduler();
     ~Scheduler();
@@ -35,7 +44,8 @@ private:
    // int userWeights[3];
     int q[10];// queues' lengths. NrUsers schould be <= 10 !!!
     int NrBlocks[10];
-    double userLinkQualities[3];
+    std::vector<UserInfo> users;
+    double userLinkQualities[8];
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
