@@ -1,4 +1,0 @@
-#!/bin/sh
-cd `dirname $0`
-../src/cad -n .:../src $*
-# for shared lib, use: opp_run -l ../src/cad -n .:../src $*

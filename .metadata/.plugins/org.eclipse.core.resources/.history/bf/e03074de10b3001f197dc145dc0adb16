@@ -1,0 +1,136 @@
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
+// 
+
+#include "Scheduler.h"
+#include <algorithm>
+
+Define_Module(Scheduler);
+
+
+
+Scheduler::Scheduler()
+{
+    selfMsg = nullptr;
+}
+
+Scheduler::~Scheduler()
+{
+    cancelAndDelete(selfMsg);
+}
+
+
+void Scheduler::initialize()
+{
+    NrUsers = par("gateSize").intValue();
+    NrOfChannels = 10;//read from omnetpp.ini
+    selfMsg = new cMessage("selfMsg");
+    for(int user = 0; user < NrUsers; ++user)
+    {
+        users.push_back((User(user, user+1)));
+    }
+//    for(int i = 0; i < 10; i++){
+//           q[i]=0;
+//           userWeights[i] = 0;
+//           usersRadioLinkQuality[i] = 0.0f;
+//    }
+    scheduleAt(simTime(), selfMsg);
+}
+
+void Scheduler::handleMessage(cMessage *msg) {
+    // Handle info messages
+    for(int i = 0; i < NrUsers; i++) {
+        if (msg->arrivedOn("rxInfo", i)) {
+            users[i].addQueueLength();
+            EV << "Scheduler: Update queue length: user[" << i << "]= " 
+               << users[i].getQueueLength() << endl;
+            delete msg;
+            return;
+        }
+    }
+
+    // Handle scheduling cycle
+    if (msg == selfMsg) {
+        // Reset remaining channels at start of each cycle
+        int remainingChannels = NrOfChannels;
+        double currentSimTime = simTime().dbl();
+        
+        EV << "Starting new scheduling cycle with " << remainingChannels << " channels" << endl;
+
+        // Sort users by priority
+        std::vector<std::pair<int, User&>> sortedUsers;
+        for(auto& user : users) {
+            sortedUsers.push_back({user.getUserIndex(), user});
+        }
+        
+        std::sort(sortedUsers.begin(), sortedUsers.end(), 
+            [this,currentSimTime](const auto& a, const auto& b) {
+                return a.second.getUserPriority(currentSimTime) > 
+                       b.second.getUserPriority(currentSimTime);
+        });
+
+        // Vector to store allocations
+        std::vector<std::pair<int, int>> allocations(NrUsers, {-1, 0});
+
+        // Allocate blocks
+        for(const auto& [originalIndex, user] : sortedUsers) {
+            if(remainingChannels <= 0) {
+                EV << "No more channels available" << endl;
+                break;
+            }
+
+            int userQueueLength = std::max(0, user.getQueueLength());
+            int blocksToAllocate = std::min(userQueueLength, remainingChannels);
+
+            if(blocksToAllocate > 0) {
+                allocations[originalIndex] = {originalIndex, blocksToAllocate};
+                remainingChannels -= blocksToAllocate;
+                EV << "Allocated " << blocksToAllocate << " blocks for user " <<user.getUserIndex<< " remaining: " 
+                   << remainingChannels << endl;
+            }
+        }
+
+        // Process allocations
+        for(const auto& allocation : allocations) {
+            int userIndex = allocation.first;
+            int blocks = allocation.second;
+            
+            if(userIndex >= 0 && blocks > 0) {
+                cMessage *cmd = new cMessage("cmd");
+                cmd->addPar("nrBlocks");
+                cmd->par("nrBlocks").setLongValue(blocks);
+                cmd->addPar("userPrioType");
+                cmd->par("userPrioType").setLongValue(users[userIndex].getUserWeight());
+                
+                users[userIndex].updateLastTimeServed(currentSimTime);
+                users[userIndex].decrementQueueLength(blocks);
+                
+                send(cmd, "txScheduling", userIndex);
+            }
+        }
+
+        EV << "End of scheduling cycle, channels used: " 
+           << (NrOfChannels - remainingChannels) << endl;
+
+        // Schedule next cycle
+        scheduleAt(simTime() + par("schedulingPeriod").doubleValue(), selfMsg);
+    }
+}

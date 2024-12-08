@@ -31,11 +31,17 @@ void MyQ::handleMessage(cMessage *msg)
     } else if (msg->arrivedOn("rxScheduling")) {
         // Read parameters from msg
         int nrOfRadioBlocks = (int)msg->par("nrBlocks");
+        int userPriorityType = (int)msg->par("userPriorityType");
+        EV << "MyQ: Received scheduling message with nrOfRadioBlocks=" << nrOfRadioBlocks << " and userPriorityType=" << userPriorityType << endl;
         delete msg;
 
         // Empty the queue
         while (!queue.isEmpty() && nrOfRadioBlocks > 0) {
             msg = (cMessage *)queue.pop();
+            cMsgPar *par = new cMsgPar("userPriorityType");
+            par->setLongValue(userPriorityType);
+            msg->addPar(par);
+
             send(msg, "txPackets");
             nrOfRadioBlocks--;
         }

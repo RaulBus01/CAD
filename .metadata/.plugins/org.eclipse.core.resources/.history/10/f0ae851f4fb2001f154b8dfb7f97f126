@@ -1,0 +1,242 @@
+Buș
+busraul
+Idle
+
+Buș — 11/14/2024 8:35 PM
+uite la msa
+andarrazvan — 11/14/2024 8:35 PM
+oho
+pofta buna
+Buș — 11/14/2024 8:35 PM
+MSA
+andarrazvan — 11/14/2024 8:36 PM
+aaaa
+rau atunci
+Buș — 11/14/2024 8:36 PM
+:))
+andarrazvan — 11/14/2024 8:36 PM
+intri pe dis
+?
+Buș — 11/14/2024 8:36 PM
+imediat
+andarrazvan — 11/14/2024 8:36 PM
+kk
+Buș — 11/16/2024 7:24 PM
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Catan-Style Game API",
+    "description": "API specification for a multiplayer resource management and building game",
+    "version": "1.0.0",
+Expand
+openapi.json
+12 KB
+https://editor.swagger.io/?_gl=1*1wag2zp*_gcl_au*ODYwMDU0NzkyLjE3MzA3NDc0NzQ.
+Buș — 11/16/2024 11:13 PM
+NB!
+andarrazvan — 11/16/2024 11:21 PM
+Nb
+Buș — 11/20/2024 8:45 PM
+Joci o joaca sau esti la proiect?
+andarrazvan — 11/20/2024 11:09 PM
+la project
+acum
+ca inainte am jucat uno ca o fost prietena lu Alex la noi
+Buș — 11/20/2024 11:10 PM
+Spor😉
+andarrazvan — 11/20/2024 11:10 PM
+da mai pot sa fac si maine
+ca nu prea am chef
+))))
+Buș — 11/20/2024 11:10 PM
+Nu mai intru ca m-am pus in pat
+andarrazvan — 11/20/2024 11:10 PM
+bun bu
+n
+Buș — 11/20/2024 11:10 PM
+Nb
+andarrazvan — 11/20/2024 11:10 PM
+nb
+Buș — 11/21/2024 7:14 PM
+hello
+Buș started a call that lasted a few seconds. — 11/21/2024 7:15 PM
+Buș — 11/22/2024 10:15 PM
+sunt
+andarrazvan — 11/23/2024 6:23 PM
+https://www.youtube.com/watch?v=AiKQJyKosfw
+YouTube
+vlogize
+How to Implement Multithreading in Java Spring Boot
+Image
+https://www.youtube.com/watch?v=3rJBLFA95Io
+YouTube
+Java Techie
+Multi-Threading in Spring Boot using CompletableFuture | @Async | J...
+Image
+Buș started a call that lasted a few seconds. — 11/24/2024 2:59 PM
+andarrazvan started a call that lasted 3 hours. — 11/24/2024 3:00 PM
+Buș — 11/24/2024 3:55 PM
+IMD
+andarrazvan started a call that lasted an hour. — 11/25/2024 2:17 PM
+andarrazvan — 11/25/2024 9:19 PM
+https://www.youtube.com/watch?v=5LlnbeJ1aYc
+YouTube
+Antena 3 CNN
+Călin Georgescu, declarații controversate
+Image
+Buș — 11/29/2024 6:19 PM
+sunteti domnule?
+Buș started a call that lasted a few seconds. — 11/29/2024 6:24 PM
+andarrazvan started a call that lasted 5 hours. — 11/29/2024 6:56 PM
+You missed a call from andarrazvan that lasted a few seconds. — 12/1/2024 2:00 PM
+Buș — 12/1/2024 5:55 PM
+Ne auzim mai incolo
+Buș — 12/1/2024 7:52 PM
+Ești?
+andarrazvan — 12/1/2024 7:53 PM
+da
+You missed a call from andarrazvan that lasted a few seconds. — 12/1/2024 7:54 PM
+Buș — Yesterday at 11:33 AM
+sunt
+Buș — Yesterday at 10:05 PM
+hai
+Buș started a call that lasted a few seconds. — Yesterday at 10:06 PM
+You missed a call from andarrazvan that lasted a few seconds. — Today at 2:46 PM
+andarrazvan started a call. — Today at 2:46 PM
+Buș — Today at 2:46 PM
+hai sv
+andarrazvan — Today at 4:49 PM
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+Expand
+message.txt
+5 KB
+﻿
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
+// 
+
+#include "Scheduler.h"
+#include <algorithm>
+
+Define_Module(Scheduler);
+
+
+
+Scheduler::Scheduler()
+{
+    selfMsg = nullptr;
+}
+
+Scheduler::~Scheduler()
+{
+    cancelAndDelete(selfMsg);
+}
+
+
+void Scheduler::initialize()
+{
+    NrUsers = par("gateSize").intValue();
+    NrOfChannels = 10;//read from omnetpp.ini
+    selfMsg = new cMessage("selfMsg");
+    for(int user = 0; user < NrUsers; ++user)
+    {
+        users.push_back((User(user, user+1)));
+    }
+//    for(int i = 0; i < 10; i++){
+//           q[i]=0;
+//           userWeights[i] = 0;
+//           usersRadioLinkQuality[i] = 0.0f;
+//    }
+    scheduleAt(simTime(), selfMsg);
+}
+
+void Scheduler::handleMessage(cMessage *msg)
+{
+    int NrBlocks[NrUsers];
+
+    for(int j=0;j<NrUsers; j++){
+//        q[j]= getParentModule()->getSubmodule("user",j)->getSubmodule("myqq")->par("qlp");
+        NrBlocks[j] = 0;
+//        EV << "Scheduler: q["<<j<<"]= " << q[j] <<endl;
+    }
+
+
+    for(int i =0; i < NrUsers;i++){
+    if (msg->arrivedOn("rxInfo", i)){
+          users[i].addQueueLength();
+        EV << "Scheduler: Update queue length: user["<<i<<"]= " << users[i].getQueueLength() << endl;
+        delete(msg);
+        // TO DO: update the info for each user gathered from rxInfo, queueLength
+    }
+    }
+        if (msg == selfMsg){
+          int remainingChanels = NrOfChannels;
+          std::sort(users.begin(), users.end(),[this](User user1, User user2)
+                  {
+                      return user1.getCurrentPriority() > user2.getCurrentPriority();
+                  });
+          for(auto user : users)
+          {
+              EV << "!!!user " << user.getUserIndex() << endl;
+          }
+          //here comes the scheduling algorithm !!!
+            for(auto user : users)
+            {
+                int userQueueLength = user.getQueueLength();
+                int userIndex = user.getUserIndex();
+                if((remainingChanels - userQueueLength) < 0)
+                {
+                    EV << "Scheduler: All channels allocated to highest priority user ["<< userIndex <<"], break!!! remainingChanels - user["<< userIndex <<"].queueLen :" << remainingChanels - userQueueLength << endl;
+                    NrBlocks[userIndex] = remainingChanels;
+                    break;
+                }else
+                {
+                    EV << "Scheduler: allocated number of channels: " << userQueueLength << "for user: "<< userIndex << endl;
+                    NrBlocks[userIndex] = userQueueLength; // we have enough channels to accommodate the user's needs
+                }
+                remainingChanels = remainingChanels - userQueueLength;
+                EV << "Scheduler: remainingChanels: " <<  remainingChanels << " after giving user[ " << userIndex << "], "<< userQueueLength<<" channels " << endl;
+             }
+
+            std::sort(users.begin(), users.end(),[this](User user1, User user2)
+                              {
+                                  return user1.getUserIndex() < user2.getUserIndex();
+                              });
+
+            // we iterate trough the users
+            for(int i = 0; i < NrUsers; i++){
+            EV << "!!!!Scheduler:Allocated for user "<< i << " NrBlocks: " << NrBlocks[i] << endl;
+                // we check if the user i has any allocated RB's and we send the corresponding message
+                if(NrBlocks[i]>0)
+                {
+                    cMessage *cmd = new cMessage("cmd");
+                    EV << "Scheduler: decrease queue lenght of user["<<i<<"]= " << users[i].decrementQueueLength(NrBlocks[i]) <<endl;
+                    cmd->addPar("nrBlocks");
+                    cmd->par("nrBlocks").setLongValue(NrBlocks[i]);
+                    users[i].updateLastTimeServed(simTime().dbl());
+                    //set parameter value, e.g., nr of blocks to be sent from the queue by user i
+                    send(cmd,"txScheduling",i);
+                }
+          //  double xtime = simTime().dbl();
+            }
+        scheduleAt(simTime()+par("schedulingPeriod").doubleValue(), selfMsg);
+    }
+}
+message.txt
+5 KB

@@ -23,29 +23,91 @@ using namespace omnetpp;
 /**
  * TODO - Generated class
  */
+class User{
+public:
+    User(int index, int weight)
+    {
+        this->index = index;
+        this->weight = weight;
+        this->lastTimeServed = 0;
+        this->queueLength = 0;
+    }
 
- struct UserInfo {
+    int addQueueLength()
+    {
+        this->queueLength++;
+        return this->queueLength;
+    }
+
+    int decrementQueueLength(int subtrahend)
+    {
+        this->queueLength -= subtrahend;
+        return this->queueLength;
+    }
+
+    int getQueueLength()
+    {
+        return this->queueLength;
+    }
+
+    double updateLastTimeServed(double currentSimTime)
+    {
+        this->lastTimeServed = currentSimTime;
+        return this->lastTimeServed;
+    }
+
+    double getUserPriority(double currentSimTime)
+    {
+        if(this->lastTimeServed < 0)
+        {
+            return this->weight;
+        }
+        return this->weight*(currentSimTime - this->lastTimeServed);
+    }
+
+    int getUserIndex()
+    {
+        return this->index;
+    }
+
+    int getUserWeight()
+        {
+            return this->weight;
+        }
+    void updateDelayStats(double delay) {
+        totalDelay += delay;
+        packetCount++;
+    }
+    
+    double getAverageDelay() const {
+        return packetCount > 0 ? totalDelay / packetCount : 0.0;
+    }
+    
+    int getPacketCount() const {
+        return packetCount;
+    }
+private:
+    User();
     int index;
-    int userWeight;
+    int weight;
+    double totalDelay;
+    int packetCount;
     int queueLength;
-    double radioLinkQuality;
     double lastTimeServed;
 };
+
+
 class Scheduler : public cSimpleModule
 {
-  
 public:
     Scheduler();
     ~Scheduler();
 private:
     cMessage *selfMsg;
     int NrUsers;
+    std::vector<User> users;
     int NrOfChannels;
-   // int userWeights[3];
-    int q[10];// queues' lengths. NrUsers schould be <= 10 !!!
-    int NrBlocks[10];
-    std::vector<UserInfo> users;
-    double userLinkQualities[8];
+     std::vector<simsignal_t> userDelaySignals;
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

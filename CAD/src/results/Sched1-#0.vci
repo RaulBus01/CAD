@@ -1,0 +1,45 @@
+file 5263 1733513146                                            
+version 3
+run Sched1-0-20241206-21:24:50-9024
+attr configname Sched1
+attr datetime 20241206-21:24:50
+attr datetimef 20241206-212450
+attr experiment Sched1
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvarsd ""
+attr iterationvarsf ""
+attr measurement ""
+attr network RadioSch2
+attr processid 9024
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+config description "low job arrival rate"
+config *.usersCount 3
+config **.user[*].generator.sendIaTime "0.25 ms"
+config **.user[*].radioLinkQuality "uniform(0.5, 1)"
+config **.user[*].myqq.qlp 0
+config network RadioSch2
+config sim-time-limit 100h
+config cpu-time-limit 300s
+
+vector 0 RadioSch2.sink lifetime:vector ETV
+attr recordingmode vector
+attr title "Packet lifetime"
+vector 1 RadioSch2.sink delayHighPriority:vector ETV
+attr recordingmode vector
+attr title "High Priority Delay"
+vector 2 RadioSch2.sink delayMediumPriority:vector ETV
+attr recordingmode vector
+attr title "Medium Priority Delay"
+vector 3 RadioSch2.sink delayLowPriority:vector ETV
+attr recordingmode vector
+attr title "Low Priority Delay"
+0	1155 2053 51 504 1 10 88 0.00270021928 6.346196892527 103.82769456261 234.1273561416
+1	3208 937 51 502 1 10 40 0.00270021928 1.978744477454 27.468349148044 31.169148179525
+2	4145 842 57 448 1 9 36 0.101851004835 2.393683146822 37.693126421013 53.399273404973
+3	4987 274 62 504 1 10 12 1 6.346196892527 38.666218993552 149.5589345571
+

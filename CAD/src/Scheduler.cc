@@ -4,6 +4,13 @@
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 // 
+
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -15,6 +22,7 @@
 
 #include "Scheduler.h"
 #include <algorithm>
+
 Define_Module(Scheduler);
 
 
@@ -30,125 +38,88 @@ Scheduler::~Scheduler()
 }
 
 
-bool sort_functionByUserWeight(const UserInfo &a, const UserInfo &b)
-{
-    return a.userWeight > b.userWeight;
-}
-
-
 void Scheduler::initialize()
 {
     NrUsers = par("gateSize").intValue();
     NrOfChannels = 10;//read from omnetpp.ini
     selfMsg = new cMessage("selfMsg");
-    for(int i=0; i<10;i++){
-           q[i]=0;
-           NrBlocks[i]=0;
-      }
-
-    int HIGH_PRIORITY = 3;
-    int MEDIUM_PRIORITY = 2;
-    int LOW_PRIORITY = 1;
-
-    users.resize(NrUsers);
-    for (int i = 0; i < NrUsers; i++) {
-        double radioLinkQuality = getParentModule()->getSubmodule("user", i)->par("radioLinkQuality").doubleValue();
-        double initialLastTimeServed = -1.0f;
-        int initialQueueLength = 0;
-
-        if( i % 3 == 0){
-            users[i] = {i, HIGH_PRIORITY, initialQueueLength, radioLinkQuality, initialLastTimeServed};
-        }else if( i % 3 == 1){
-            users[i] = {i, MEDIUM_PRIORITY, initialQueueLength, radioLinkQuality, initialLastTimeServed};
-        }else{
-            users[i] = {i, LOW_PRIORITY, initialQueueLength, radioLinkQuality, initialLastTimeServed};
-        }
-
-        EV << "User " << i << " has radio link quality " << radioLinkQuality << endl;
-        
+    for(int user = 0; user < NrUsers; ++user)
+    {
+        users.push_back((User(user, user+1)));
     }
+    userDelaySignals.resize(NrUsers);
+    for (int i = 0; i < NrUsers; i++) {
+            userDelaySignals[i] = registerSignal(("userDelay-" + std::to_string(i)).c_str());
+     }
 
- 
     scheduleAt(simTime(), selfMsg);
-
-
 }
 
-void Scheduler::handleMessage(cMessage *msg)
-{
-    int NrBlocks[NrUsers];
-
-    int userWeights[NrUsers];
-    for (int i = 0; i < NrUsers; i++) {
+void Scheduler::handleMessage(cMessage *msg) {
+    // Handle info messages
+    for(int i = 0; i < NrUsers; i++) {
         if (msg->arrivedOn("rxInfo", i)) {
-            if (msg->hasPar("queueLengthInfo")) {
-                q[i] = msg->par("queueLengthInfo");
-                EV << "Update: q[" << i << "]= " << q[i] << endl;
-
-                // Obtain the user index from the gate index
-                int userIndex = msg->getArrivalGate()->getIndex();
-                // Read the radio link quality from the message
-                userLinkQualities[userIndex] = msg->par("radioLinkQuality").doubleValue();
-                EV << "Radio link quality for user " << userIndex << " is " << userLinkQualities[userIndex] << endl;
-
-                users[userIndex].radioLinkQuality = userLinkQualities[userIndex];
-                users[userIndex].queueLength = q[i];
-                
-                EV << "User " << userIndex << " HAS WEIGHT " << users[userIndex].userWeight << endl;
-                delete msg;
-            } else {
-                EV << "Warning: Received message without queueLengthInfo parameter" << endl;
-                delete msg;
-            }
+            users[i].addQueueLength();
+            double currentTime = simTime().dbl();
+            double delay = currentTime - msg->getCreationTime().dbl();
+            users[i].updateDelayStats(delay);
+            emit(userDelaySignals[i], delay);
+            EV << "Scheduler: Update queue length: user[" << i << "]= " 
+               << users[i].getQueueLength() << endl;
+            delete msg;
+            return;
         }
     }
 
-    if (msg == selfMsg) {
-        int remainingBlocks = NrOfChannels;
-        EV << "remainingBlocks = " << remainingBlocks << endl;
+     if (msg == selfMsg) {
+        double currentSimTime = simTime().dbl();
+        int remainingChannels = NrOfChannels;
 
-        // std::vector<int> userIndexes(NrUsers);
-        // for (int i = 0; i < NrUsers; i++) {
-        //     userIndexes[i] = i;
-        // }
-
-        // Sort the user indexes based on the radio link quality
-
-        // std::sort(userIndexes.begin(), userIndexes.end(), [this](int i1, int i2) {
-        //     return userLinkQualities[i1] > userLinkQualities[i2];
-        // });
-
-        std::sort(users.begin(), users.end(), sort_functionByUserWeight);
-
-         for (const auto &user : users) {
-            EV << "User " << user.index << " has radio link quality " << user.radioLinkQuality << " and queue length " << user.queueLength << endl;
-            if (remainingBlocks <= 0) {
-                break;
-            }
-            int nrBlocks = user.queueLength;
-            
-            if (nrBlocks > 0) {
-                if (nrBlocks <= remainingBlocks) {
-                    NrBlocks[user.index] = nrBlocks;
-                    remainingBlocks -= nrBlocks;
-                } else {
-                    NrBlocks[user.index] = remainingBlocks;
-                    remainingBlocks = 0;
-                }
-            } else {
-                NrBlocks[user.index] = 0;
-            }
-            EV << "User " << user.index << " has " << NrBlocks[user.index] << " blocks to transmit" << endl;
-
-            // Declare and initialize the cmd variable
-            cMessage *cmd = new cMessage("cmd");
-            cmd->addPar("nrBlocks");
-            cmd->par("nrBlocks").setLongValue(NrBlocks[user.index]);
-            send(cmd, "txScheduling", user.index);
+        // Create priority-ordered vector of users
+        std::vector<std::pair<double, int>> priorityQueue; // {priority, userIndex}
+        for(int i = 0; i < users.size(); i++) {
+            double priority = users[i].getUserPriority(currentSimTime);
+            priorityQueue.push_back({priority, i});
         }
-        scheduleAt(simTime() + par("schedulingPeriod").doubleValue(), selfMsg);
-    
 
-      
+        // Sort by priority (highest first)
+        std::sort(priorityQueue.begin(), priorityQueue.end(),
+            [](const auto& a, const auto& b) {
+                return a.first > b.first;
+            });
+
+        // Process and send in priority order
+        for(const auto& [priority, userIndex] : priorityQueue) {
+            if(remainingChannels <= 0) break;
+
+            int userQueueLength = std::max(0, users[userIndex].getQueueLength());
+            EV << "Priority: " << priority << " - User " << userIndex 
+               << " has " << userQueueLength << " blocks in queue" << endl;
+            int blocksToAllocate = std::min(userQueueLength, remainingChannels);
+            EV << "Priority: " << priority << " - Allocating " << blocksToAllocate 
+               << " blocks to user " << userIndex << endl;
+            if(blocksToAllocate > 0) {
+                // Send immediately after allocation
+                cMessage *cmd = new cMessage("cmd");
+                cmd->addPar("nrBlocks");
+                cmd->par("nrBlocks").setLongValue(blocksToAllocate);
+
+
+
+                cmd->addPar("userPriorityType");
+                cmd->par("userPriorityType").setLongValue(users[userIndex].getUserWeight());
+
+                EV << "Priority: " << priority << " - Sending " << blocksToAllocate 
+                   << " blocks to user " << userIndex << endl;
+
+                users[userIndex].updateLastTimeServed(currentSimTime);
+                users[userIndex].decrementQueueLength(blocksToAllocate);
+                remainingChannels -= blocksToAllocate;
+
+                send(cmd, "txScheduling", userIndex);
+            }
+        }
+
+        scheduleAt(simTime() + par("schedulingPeriod").doubleValue(), selfMsg);
     }
 }

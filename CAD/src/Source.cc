@@ -34,48 +34,30 @@ void Source::initialize()
 }
 
 void Source::handleMessage(cMessage *msg)
-
-
 {
-    ASSERT(msg == sendMessageEvent);
-//for(j=0;j<nrPackets;j++){
-    cMessage *job = new cMessage("job");
-    //the "job" message can have a parameter PacketLength !
-    send(job, "txPackets");
 
-//}
-    //end for
+    int nrUsers = par("usersCount");
+    int nrPackets = par("packetsPerUser");
+    int PacketLength = 1;
+    double schedulingCycle = 1.0;
+    double netwload = par("networkLoad");
+    int nrChannels = par("channels");
+    for(int i=0;i<nrPackets;i++){
+        ASSERT(msg == sendMessageEvent);
+        cMessage* job = new cMessage("job");
+        send(job, "txPackets");
+    }
+     if(simTime() >= par("MAX_Sim").doubleValue()){
+        endSimulation();
+    }
+    
 
-    double sendingTime;
-    sendingTime = par("sendIaTime").doubleValue();
+    double sendingTime = (nrUsers * nrPackets * PacketLength * schedulingCycle) / (netwload * nrChannels);
 
-   // if(simTime() >= MAX_SiM) endSimulation();
-    //MAX_SiM se pune in ini si citeste de acolo si trebuie sa fie de cel putin 1000 de ori mai mare
-    // decat sendingTime pt netwload 80% (ideal de 10 mii de ori mai mare)
+    // Output the calculated sending time for debugging
+    EV << "Calculated Sending Time: " << sendingTime << " ms" << endl;
 
-
-    //scheduleAt(simTime()+ exponential(sendingTime));
-
-    // sendingTime = function(network load)
-
-    /*netwload = data_generated/ transfer_rate
-     *
-     * data_generated = nrUsers* nrPackets *PacketLength / sendingTime
-     * PacketLength = 1
-     *
-     * transfer_rate = nr_of_channels/schedulingCycle ;
-     * schedulingCycle = 1 ms
-     *
-     * netwload = (nrUsers*nrPackets*PacketLength*schedulingCycle)/(sendingTime*nr_of_channels)
-     *
-     *sendingTime =  (nrUsers*nrPackets*PacketLength*schedulingCycle)/(netwload*nr_of_channels)
-     *
-     * */
-
-
-    scheduleAt(simTime()+ exponential(sendingTime), sendMessageEvent);
-
-    //scheduleAt(simTime()+par("sendIaTime").doubleValue(), sendMessageEvent);
+    scheduleAt(simTime() + exponential(sendingTime), sendMessageEvent);
 }
 
 

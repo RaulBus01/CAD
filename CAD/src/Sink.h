@@ -17,6 +17,7 @@
 #define __SCHED_TST_SINK_H_
 
 #include <omnetpp.h>
+#include <fstream>
 
 using namespace omnetpp;
 
@@ -27,9 +28,21 @@ class Sink : public cSimpleModule
 {
 private:
   //  simsignal_t lifetimeSignal;
+  //  simsignal_t delaySignalHighPriority;
+  //  simsignal_t delaySignalMediumPriority;
+  //  simsignal_t delaySignalLowPriority;
+
+  // std::vector<simtime_t> delayHighPriority;
+  // std::vector<simtime_t> delayMediumPriority;
+  // std::vector<simtime_t> delayLowPriority;
+  std::ofstream csvFile;
+  void writeToCSV(int userIndex,int priority, simtime_t delay);
   protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
+    virtual void initialize() override;
+    virtual void handleMessage(cMessage *msg) override;
+    virtual void finish() override;
+    void recordDelay(simtime_t delay, int priority);
+    
 };
 
 #endif

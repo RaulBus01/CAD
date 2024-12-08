@@ -1,0 +1,132 @@
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
+// 
+
+#include "Scheduler.h"
+#include <algorithm>
+
+Define_Module(Scheduler);
+
+
+
+Scheduler::Scheduler()
+{
+    selfMsg = nullptr;
+}
+
+Scheduler::~Scheduler()
+{
+    cancelAndDelete(selfMsg);
+}
+
+
+void Scheduler::initialize()
+{
+    NrUsers = par("gateSize").intValue();
+    NrOfChannels = 10;//read from omnetpp.ini
+    selfMsg = new cMessage("selfMsg");
+    for(int user = 0; user < NrUsers; ++user)
+    {
+        users.push_back((User(user, user+1)));
+    }
+//    for(int i = 0; i < 10; i++){
+//           q[i]=0;
+//           userWeights[i] = 0;
+//           usersRadioLinkQuality[i] = 0.0f;
+//    }
+    scheduleAt(simTime(), selfMsg);
+}
+
+void Scheduler::handleMessage(cMessage *msg)
+{
+    int NrBlocks[NrUsers];
+
+    for(int j=0;j<NrUsers; j++){
+//        q[j]= getParentModule()->getSubmodule("user",j)->getSubmodule("myqq")->par("qlp");
+        NrBlocks[j] = 0;
+//        EV << "Scheduler: q["<<j<<"]= " << q[j] <<endl;
+    }
+
+
+    for(int i =0; i < NrUsers;i++){
+    if (msg->arrivedOn("rxInfo", i)){
+          users[i].addQueueLength();
+        EV << "Scheduler: Update queue length: user["<<i<<"]= " << users[i].getQueueLength() << endl;
+        delete(msg);
+        // TO DO: update the info for each user gathered from rxInfo, queueLength
+    }
+    }
+        if (msg == selfMsg){
+          int remainingChanels = NrOfChannels;
+          double currentSimTime = simTime().dbl();
+          std::sort(users.begin(), users.end(),[this,currentSimTime](User user1, User user2)
+                  {
+                      return user1.getUserPriority(currentSimTime) > user2.getUserPriority(currentSimTime);
+                  });
+          for(auto user : users)
+          {
+              EV << "!!!user " << user.getUserIndex() << endl;
+          }
+          //here comes the scheduling algorithm !!!
+            for(auto user : users)
+            {
+                int userQueueLength = user.getQueueLength();
+                int userIndex = user.getUserIndex();
+                if((remainingChanels - userQueueLength) < 0)
+                {
+                    EV << "Scheduler: All channels allocated to highest priority user ["<< userIndex <<"], break!!! remainingChanels - user["<< userIndex <<"].queueLen :" << remainingChanels - userQueueLength << endl;
+                    NrBlocks[userIndex] = remainingChanels;
+                    break;
+                }else
+                {
+                    EV << "Scheduler: allocated number of channels: " << userQueueLength << "for user: "<< userIndex << endl;
+                    NrBlocks[userIndex] = userQueueLength; // we have enough channels to accommodate the user's needs
+                }
+                remainingChanels = remainingChanels - userQueueLength;
+                EV << "Scheduler: remainingChanels: " <<  remainingChanels << " after giving user[ " << userIndex << "], "<< userQueueLength<<" channels " << endl;
+             }
+
+            std::sort(users.begin(), users.end(),[this](User user1, User user2)
+                              {
+                                  return user1.getUserIndex() < user2.getUserIndex();
+                              });
+
+            for(int i = 0; i < NrUsers; i++){
+            EV << "!!!!Scheduler:Allocated for user "<< i << " NrBlocks: " << NrBlocks[i] << endl;
+                
+                if(NrBlocks[i]>0)
+                {
+                    cMessage *cmd = new cMessage("cmd");
+                    EV << "Scheduler: decrease queue lenght of user["<<i<<"]= " << users[i].decrementQueueLength(NrBlocks[i]) <<endl;
+                    cmd->addPar("nrBlocks");
+                    cmd->par("nrBlocks").setLongValue(NrBlocks[i]);
+                    users[i].updateLastTimeServed(currentSimTime);
+                  
+                  
+                    send(cmd,"txScheduling",i);
+                }
+
+
+          
+            }
+        scheduleAt(simTime()+par("schedulingPeriod").doubleValue(), selfMsg);
+    }
+}

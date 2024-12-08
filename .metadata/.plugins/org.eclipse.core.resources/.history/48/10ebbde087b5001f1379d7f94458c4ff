@@ -1,0 +1,17 @@
+[General]
+network = RadioSch2
+sim-time-limit = 100h
+cpu-time-limit = 300s
+#debug-on-errors = true
+#record-eventlog = true
+
+[Config Sched1]
+description = "low job arrival rate"
+
+*.usersCount = 3
+**.user[*].generator.sendIaTime = 0.25 ms
+**.user[*].radioLinkQuality = uniform(0.5, 1)
+
+**.user[*].myqq.qlp = 0
+
+
